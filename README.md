@@ -2,7 +2,14 @@
 Functionality for all kinds of auctions, where people compete to acquire various assets
 
 ## Overview
-Once installed will be use methods:
+Each AuctionContract instance is produced by calling `AuctionFactory.produce(AuctionParams params)`, setting default parameters which include:
+
+### AuctionParams
+* `uint32 duration` in seconds, 0 means no auction end time, so it must be finished or canceled by owner
+* `address currency` (ERC20 contract, or `0x0` means native coin)
+* `uint256 startingBid` the first bid that starts the auction
+* `uint256 minimumIncrease` the minimum difference between bids
+* `uint256 retainFraction` the amount to refund when outbid, ranging between 0 and `FRACTION=100000` (default is 0)
 
 <table>
 <thead>
@@ -16,27 +23,27 @@ Once installed will be use methods:
 	<tr>
 		<td><a href="#create">create</a></td>
 		<td>anyone</td>
-		<td>creation auction</td>
+		<td>creates a new auction with default parameters, return auction `id`</td>
 	</tr>
 	<tr>
 		<td><a href="#bid">bid</a></td>
 		<td>anyone</td>
-		<td>making bid for action creted before</td>
+		<td>bid in an existing auction, at least `minimumBid` more than last bid. If successful, the previous bidder has tokens returned in the amount of `bidAmount.mul(FRACTION-retainFraction).div(FRACTION)`</td>
 	</tr>
 	<tr>
 		<td><a href="#cancel">cancel</a></td>
 		<td>owner</td>
-		<td>canceling auction</td>
+		<td>can be called by the owner to cancel the auction, at any time</td>
 	</tr>
 	<tr>
-		<td><a href="#finish">finish</a></td>
+		<td><a href="#complete">complete</a></td>
 		<td>owner</td>
-		<td>finishing auction</td>
+		<td>can be called by the owner to complete an auction</td>
 	</tr>
 	<tr>
 		<td><a href="#withdraw">withdraw</a></td>
 		<td>owner</td>
-		<td>withdraw fund to someone</td>
+		<td>called by owner to withdraw the funds from the auction and send them to an address</td>
 	</tr>
 	<tr>
 		<td><a href="#transferownership">transferOwnership</a></td>
@@ -44,12 +51,12 @@ Once installed will be use methods:
 		<td>transferOwnership</td>
 	</tr>
     <tr>
-		<td><a href="#setdefaultdata">setDefaultData</a></td>
+		<td><a href="#setparameters">setParameters</a></td>
 		<td>owner</td>
-		<td>set default settings</td>
+		<td>update default settings</td>
 	</tr>
     <tr>
-		<td><a href="#setdefaultdata">prolong</a></td>
+		<td><a href="#prolong">prolong</a></td>
 		<td>owner</td>
 		<td>prolonging expired auction</td>
 	</tr>
@@ -89,8 +96,8 @@ name  | type | description
 --|--|--
 id|uint256|auction id
 
-#### finish
-finishing auction with `id`
+#### complete
+completing auction with `id`
 Params:    
 name  | type | description
 --|--|--
@@ -111,7 +118,7 @@ name  | type | description
 --|--|--
 to|address|address 
 
-#### setDefaultData
+#### setParameters
 method will set default settings
 Params:    
 name  | type | description
@@ -121,22 +128,25 @@ minimumBid|uint256|minimumBid
 minimumIncrease|uint256|minimumIncrease
 
 #### prolong
-prolonging еxpired auction `id` for `duration`
+prolonging еxpired auction `id` for `duration` from the timestamp of transaction
 Params:    
 name  | type | description
 --|--|--
 id|uint256|auction id
 
 #### getWinner
-view winner of auction `id`
+view address of the winner of auction `id`
 Params:    
 name  | type | description
 --|--|--
 id|uint256|auction id
 
 #### getHistory
-view history of bids by auction `id`
+view history of bids by auction `id` (consider using [this pagination pattern](https://ethereum.stackexchange.com/a/70558/19734))
 Params:    
 name  | type | description
 --|--|--
 id|uint256|auction id
+
+#### AuctionBid
+auctionId, bidder, currency, amount, timestamp
