@@ -142,11 +142,13 @@ name  | type | description
 id|uint256|auction id
 
 #### getHistory
-view history of bids by auction `id` (consider using [this pagination pattern](https://ethereum.stackexchange.com/a/70558/19734))
+view history of bids by auction `id` (consider pushing AuctionBid structs onto an array, and using [this pagination pattern](https://ethereum.stackexchange.com/a/70558/19734) to traverse it backwards)
 Params:    
 name  | type | description
 --|--|--
 id|uint256|auction id
+from|uint256|0 is most recent
+length|uint256|number of entries going chronologically
 
 #### AuctionBid
 auctionId, bidder, currency, amount, timestamp
