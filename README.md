@@ -148,7 +148,7 @@ name  | type | description
 --|--|--
 id|uint256|auction id
 from|uint256|0 is most recent
-length|uint256|number of entries going chronologically
+limit|uint256|number of entries going chronologically
 
 #### AuctionBid
 auctionId, bidder, currency, amount, timestamp
