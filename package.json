@@ -1,0 +1,35 @@
+{
+  "name": "auction",
+  "version": "1.0.0",
+  "description": "Functionality for all kinds of auctions, where people compete to acquire various assets",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Intercoin/Auction.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Intercoin/Auction/issues"
+  },
+  "homepage": "https://github.com/Intercoin/Auction#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.4.0",
+    "@solidity-parser/parser": "^0.14.0",
+    "@truffle/hdwallet-provider": "^1.0.37",
+    "bignumber.js": "^9.0.1",
+    "dotenv": "^8.2.0",
+    "truffle-assertions": "^0.9.2",
+    "truffle-contract-size": "^2.0.1",
+    "truffle-flattener": "^1.2.11"
+  },
+  "devDependencies": {
+    "truffle-plugin-verify": "^0.5.9"
+  }
+}

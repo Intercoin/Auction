@@ -1,0 +1,9 @@
+/flattenen
+/ipfs
+/build
+/node_modules
+artifacts
+.env
+.deps
+secret.*.json
+TODO.txt
