@@ -21,6 +21,7 @@
   "homepage": "https://github.com/Intercoin/Auction#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.0",
+    "@openzeppelin/contracts-upgradeable": "^4.4.0",
     "@solidity-parser/parser": "^0.14.0",
     "@truffle/hdwallet-provider": "^1.0.37",
     "bignumber.js": "^9.0.1",
