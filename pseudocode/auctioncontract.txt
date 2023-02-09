@@ -1,0 +1,303 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.11;
+
+contract AuctionFactory {
+
+    address releaseManager = ...; // hardcoded I think
+
+    function produce();
+    function produceDeterministic();
+
+    mapping (address => uint256) instances;
+
+    function doCharge(payer, amount) onlyInstance
+    {
+        IERC20(token).transferFrom(payer, _msgCaller(), amount);
+    }
+
+}
+
+contract Auction is Ownable {
+
+    event AlreadyWinning(address bidder, uint256 index);
+    event Bid(address bidder, uint256 amount, uint32 numBids);
+    event RefundedBid(address bidder, uint256 amount);
+    event SpentBid(address bidder, uint256 amount);
+
+    error OutsideOfIntercoinEcosystem();
+    error ChargeFailed();
+    error BidTooSmall();
+    error NotWinning();
+    error SubscribeFailed();
+    error AuctionNotFinished();
+    error NotCancelable();
+    error CannotBidAboveCurrentPrice();
+
+    error AuctionWasCanceled();
+    error AuctionNotCanceled();
+    error AuctionNotFinished();
+    error SubscriptionManagerMissing();
+
+    address factory;
+    address owner; // whoever called produce() or produceDeterministic()
+    address token; // 0 means native coin
+
+    struct Increase {
+        uint128 amount; // can't increase by over half the range
+        uint32 numBids; // increase after this many bids
+        bool canBidAboveIncrease;
+    }
+
+    struct Bid {
+        address bidder;
+        uint256 amount;
+    }
+
+    boolean canceled = false;
+    boolean cancelable = false;
+    uint64 startTime;
+    uint64 endTime;
+    uint256 startingPrice;
+    uint256 currentPrice;
+    Increase increase;
+
+    Bid[] public bids;
+    uint32 public maxWinners;
+    uint32 public winningSmallestIndex; // starts at 1
+    mapping (address => uint32) winningBidIndex; // 1-based index, thus 0 means not winning
+
+    function initialize(
+        cancelable_,
+        uint64 startTime_,
+        uint64 endTime_,
+        uint256 startingPrice_,
+        Increase increase,
+        uint32 maxWinners_,
+        SubscriptionManager manager_,
+        bool subscribeEvenIfNotFinished
+    ) {
+        factory = _msgSender();
+        [cancelable_, startTime,  endTime,  startingPrice,  increase,  winnersCount] =
+        [cancelable,  startTime_, endTime_, startingPrice_, increase_, winnersCount_];
+        currentPrice = startingPrice;
+        bids.push(Bid(0, 0)); // because winningBidIndex is 1-based
+    }
+
+    function bid(uint256 amount) payable public
+    {
+        if (token == address(0)) {
+            amount = msg.value;
+        }
+
+        address ms = _msgSender();
+        uint32 index = winningBidIndex[ms];
+        if (index > 0) {
+            emit AlreadyWinning(ms, index);
+            return;
+        }
+
+        if (token != address(0) && amount == 0) {
+            amount = currentPrice;
+        }
+        if (amount < currentPrice) {
+            throw BidTooSmall();
+        }
+        if (currentPrice < amount) {
+            if (!canBidAboveIncrease) {
+                throw CannotBidAboveCurrentPrice();
+            }
+            currentPrice = amount;
+        }
+
+        if (token != address(0)) {
+            _charge(ms, amount);
+        }
+
+        if (bids.length % increase.numBids == 0) {
+            currentPrice += increase.price; // every so often
+        }
+
+        if (bids.length > maxWinners + 1) {
+            _refundBid(winningSmallestIndex);
+        }
+        bids.push(Bid(ms, amount));
+        winningBidIndex[ms] = bids.length - 1;
+        emit Bid(ms, amount, bids.length - 1);
+        
+    }
+
+    // the factory is the one contract that needs to have allowance
+    function _charge(address payer, amount) private
+    {
+        (success, result) = IAuctionFactory(factory).doCharge(payer, amount);
+        if (!success) {
+            throw new ChargeFailed();
+        }
+    }
+
+    // send back the bids when someone isn't winning anymore
+    function _refundBid(index) private
+    {
+        Bid b = bids[index];
+        if (token == address(0)) {
+            send(b.bidder, b.amount);
+        } else {
+            IERC20(token).transfer(b.bidder, b.amount);
+        }
+        emit RefundedBid(b.bidder, b.amount);
+        bids[winningSmallestIndex] = 0; // or maybe use delete
+        delete winningBidIndex[bid.bidder];
+        ++winningSmallestIndex;
+    }
+
+    // return winning bids, from largest to smallest
+    function winning() returns (memory Bid[] result)
+    {
+        uint32 = bids.length;
+        for (uint32 i=l-1; i>=winningSmallestIndex; --i) {
+            result.push(bids[i]);
+        }
+    }
+
+    // sends all the money back to the people
+    function cancel() onlyOwner
+    {
+        if (!cancelable) {
+            throw NotCancelable();
+        }
+        uint32 = bids.length;
+        for (uint32 i=winningSmallestIndex; i<l; ++i) {
+            _refundBid(i); // send money back
+        }
+        canceled = true;
+    }
+
+    // owner withdraws all the money after auction is over
+    function withdraw(address recipient) onlyOwner
+    {
+        if (block.timestamp < endTime) {
+            throw AuctionNotFinished();
+        }
+        if (token == address(0)) {
+            send(recipient, this.balance);
+        } else {
+            IERC20(token).transfer(recipient, IERC20(token).balanceOf(this));
+        }
+    }
+
+    function _throwIfNotWinner()
+    {
+        if (canceled) {
+            throw AuctionWasCanceled();
+        }
+        if (block.timestamp < endTime) {
+            throw AuctionNotFinished();
+        }
+        address ms = _msgSender();
+        index = winningBidIndex[ms];
+        if (index == 0) {
+            throw NotWinning();
+        }
+    }
+
+    //
+    // NFT related
+    //
+
+    // auction winners can claim any NFT owned by the auction,
+    // and shouldn't bid unless the count > maxWinners
+    function NFTclaim(address NFT, uint256 tokenId)
+    {
+        _throwIfNotWinner();
+        IERC721(NFT).transfer(_msgSender(), tokenId); // will revert if not owned
+    }
+
+    // auction owner can send the NFTs anywhere if auction was canceled
+    // the auction owner would typically have been owner of all the NFTs sent to it
+    function NFTtransfer(address NFT, uint256 tokenId, address recipient) ownerOnly
+    {
+        if (!canceled) {
+            throw AuctionNotCanceled();
+        }
+        (error, result) = IERC721(NFT).transfer(recipient, tokenId);
+        if (error) {
+            revert(error);
+        }
+    }
+
+    //
+    // ROLE related
+    //
+
+    // winners can claim roles that auction can grant
+    function roleClaim(address community, uint8[] memory roleIndexes)
+    {
+        address ms = _msgSender();
+        _throwIfNotWinner();
+        uint256 l = roleIndexes.length;
+        address[] memory accounts;
+        for (uint256 i=0; i<l; ++i) {
+            accounts.push(ms);
+        }
+        (error, result) = ICommunityContract(community).grantRole(accounts, role); // will revert if not allowed
+        if (error) {
+            revert(error);
+        }
+    }
+
+    //
+    // SUBSCRIPTION related
+    // 
+
+    address subscriptionManager; // for subscribe function
+    boolean subscribeEvenIfNotFinished;
+
+    function subscribe(address manager, uint16 intervalsMin, uint16 intervals)
+    {
+        if (subscriptionManager == address(0)) {
+            throw SubscriptionManagerMissing();
+        }
+        if (canceled) {
+            throw AuctionWasCanceled();
+        }
+        if (!subscribeEvenIfNotFinished && block.timestamp < endTime) {
+            throw AuctionNotFinished();
+        }
+        address ms = _msgSender();
+        index = winningBidIndex[ms];
+        if (index == 0) {
+            throw NotWinning();
+        }
+
+        uint256 amount = bids[index].amount;
+        _spend(bids[index].bidder, amount, true);
+
+        (success, result) = ISubscriptionManager(subscriptionManager).subscribe(
+            _msgCaller(), amount / intervalsMin, intervals
+        );
+        if (!success) {
+            throw SubscribeFailed();
+        }
+    }
+
+    function _spend(address recipient, uint256 amount, bool asWETH) private
+    {
+        Bid b = bids[index];
+        if (token == address(0)) {
+            if (asWETH) {
+                const address WETH = 0x...; // depends on the chain
+                WETH.wrap(b.amount);
+                WETH.transfer(ms, b.amount);
+            } else {
+                send(ms, b.amount);
+            }
+        } else {
+            IERC20(token).transfer(ms, amount);
+        }
+        bids[index] = 0; // to prevent replay attacks, since winningSmallestIndex wasn't incremented
+        emit SpentBid(b.bidder, b.amount);
+    }
+
+
+}
+
