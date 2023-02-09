@@ -17,6 +17,11 @@
   },
   "homepage": "https://github.com/Intercoin/Auction#readme",
   "dependencies": {
+    "@artman325/community": "^1.1.4",
+    "@artman325/nonfungibletokencontract": "^1.0.0",
+    "@artman325/releasemanager": "^2.0.0",
+    "@openzeppelin/contracts": "^4.8.1",
+    "@openzeppelin/contracts-upgradeable": "^4.8.1"
   },
   "devDependencies": {
     "@hardhat-docgen/core": "^1.2.3",
