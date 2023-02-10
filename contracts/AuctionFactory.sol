@@ -115,7 +115,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
-        _validateParams(endTime);
+        _validateParams(token, endTime);
         IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners);
         _afterInit(instance);
     }
@@ -148,6 +148,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
+        _validateParams(token, endTime);
         IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners);
         _afterInit(instance);
     }
@@ -182,7 +183,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
-        _validateParams(endTime);
+        _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
@@ -222,6 +223,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
+        _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
@@ -259,7 +261,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
-        _validateParams(endTime);
+        _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
@@ -299,6 +301,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
+        _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
@@ -336,7 +339,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
-        _validateParams(endTime);
+        _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
@@ -376,24 +379,13 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
+        _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
         IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
         _afterInit(instance);
     }
-
-
-/*
-,
-        SubscriptionManager manager,
-        bool subscribeEvenIfNotFinished
-* @param manager subscrptionMananger contract
-    * @param subscribeEvenIfNotFinished subscribe even if subsscription is not finished
-*/
-
-
-
 
     function doCharge(
         address targetToken, 
@@ -449,11 +441,13 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     }
 
     function _validateParams(
+        address token,
         uint64 endTime
     )
         internal 
         view
     {
+        require(token.isContract(), "invalid token");
         require(endTime > block.timestamp, "invalid time");
     }
     
