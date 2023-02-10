@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity >=0.8.18;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -92,6 +91,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     //////////////////////////////////////////////// Auction ////////////////////////////////////////////////
     /**
     * @notice produce Auction instance
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -102,6 +102,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     * @custom:shortd creation Auction instance
     */
     function produceAuction(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -115,13 +116,14 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
         _validateParams(endTime);
-        IAuction(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners);
+        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners);
         _afterInit(instance);
     }
 
     /**
     * @notice produce deterministic(with salt) Auction instance
     * @param salt salt
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -133,6 +135,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     */
     function produceAuctionDeterministic(
         bytes32 salt,
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -145,12 +148,13 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     {
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
-        IAuction(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners);
+        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners);
         _afterInit(instance);
     }
     //////////////////////////////////////////////// AuctionCommunity ////////////////////////////////////////////////
     /**
     * @notice produce AuctionCommunity instance
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -163,6 +167,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     * @custom:shortd creation AuctionCommunity instance
     */
     function produceCommunityAuction(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -181,13 +186,14 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
-        IAuctionCommunity(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds);
+        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds);
         _afterInit(instance);
     }
 
     /**
     * @notice produce deterministic(with salt) AuctionCommunity instance
     * @param salt salt
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -201,6 +207,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     */
     function produceAuctionCommunityDeterministic(
         bytes32 salt,
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -218,12 +225,13 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
-        IAuctionCommunity(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds);
+        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds);
         _afterInit(instance);
     }
     //////////////////////////////////////////////// AuctionNFT //////////////////////////////////////////////////////
     /**
     * @notice produce AuctionNFT instance
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -236,6 +244,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     * @custom:shortd creation AuctionNFT instance
     */
     function produceAuctionNFT(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -254,13 +263,14 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
-        IAuctionNFT(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds);
+        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds);
         _afterInit(instance);
     }
 
     /**
     * @notice produce deterministic(with salt) AuctionNFT instance
     * @param salt salt
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -274,6 +284,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     */
     function produceAuctionNFTDeterministic(
         bytes32 salt,
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -291,12 +302,13 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
-        IAuctionNFT(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds);
+        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds);
         _afterInit(instance);
     }
     //////////////////////////////////////////////// AuctionSubscription /////////////////////////////////////////////
     /**
     * @notice produce AuctionSubscription instance
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -309,6 +321,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     * @custom:shortd creation AuctionSubscription instance
     */
     function produceAuctionSubscription(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -327,13 +340,14 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
         _afterInit(instance);
     }
 
     /**
     * @notice produce deterministic(with salt) AuctionSubscription instance
     * @param salt salt
+    * @param token address of erc20 token which using when user bid and charged by factory.
     * @param cancelable can Auction be cancelled or no
     * @param startTime auction start time
     * @param endTime auction end time
@@ -347,6 +361,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     */
     function produceAuctionSubscriptionDeterministic(
         bytes32 salt,
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
@@ -364,7 +379,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
         _afterInit(instance);
     }
 

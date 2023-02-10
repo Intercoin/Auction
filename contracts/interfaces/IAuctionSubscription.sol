@@ -6,6 +6,7 @@ import "@artman325/subscriptioncontract/contracts/interfaces/ISubscriptionsManag
 
 interface IAuctionSubscription is IAuctionBase {
     function initialize(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,

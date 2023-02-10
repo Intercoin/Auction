@@ -6,6 +6,7 @@ import "@artman325/community/contracts/interfaces/ICommunity.sol";
 
 interface IAuctionCommunity is IAuctionBase {
     function initialize(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,

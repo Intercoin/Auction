@@ -5,6 +5,7 @@ import "./IAuctionBase.sol";
 
 interface IAuction is IAuctionBase {
     function initialize(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,

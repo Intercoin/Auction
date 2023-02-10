@@ -6,6 +6,7 @@ import "@artman325/nonfungibletokencontract/contracts/interfaces/INFT.sol";
 
 interface IAuctionNFT is IAuctionBase {
     function initialize(
+        address token,
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
