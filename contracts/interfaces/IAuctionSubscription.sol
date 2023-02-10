@@ -14,9 +14,9 @@ interface IAuctionSubscription is IAuctionBase {
         Increase calldata increase,
         uint32 maxWinners,
         ISubscriptionsManager manager,
-        bool subscribeEvenIfNotFinished
-        // INFT nft,
-        // uint256[] calldata tokenIds
+        bool subscribeEvenIfNotFinished, 
+        address costManager,
+        address producedBy
     ) external;
    
 }

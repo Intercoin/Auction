@@ -14,7 +14,9 @@ interface IAuctionCommunity is IAuctionBase {
         Increase calldata increase,
         uint32 maxWinners,
         ICommunity community,
-        uint8[] calldata roleIds
+        uint8[] calldata roleIds, 
+        address costManager,
+        address producedBy
     ) external;
    
 }

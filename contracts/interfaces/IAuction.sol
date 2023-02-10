@@ -11,7 +11,9 @@ interface IAuction is IAuctionBase {
         uint64 endTime,
         uint256 startingPrice,
         Increase calldata increase,
-        uint32 maxWinners
+        uint32 maxWinners, 
+        address costManager,
+        address producedBy
     ) external;
     
     /*should not be claim method */   

@@ -14,7 +14,9 @@ interface IAuctionNFT is IAuctionBase {
         Increase calldata increase,
         uint32 maxWinners,
         INFT nft,
-        uint256[] calldata tokenIds
+        uint256[] calldata tokenIds, 
+        address costManager,
+        address producedBy
     ) external;
    
 }

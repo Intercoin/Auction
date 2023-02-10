@@ -113,11 +113,12 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
-        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners);
-        _afterInit(instance);
+        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, ms);
+        _afterInit(instance, ms);
     }
 
     /**
@@ -145,12 +146,13 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     ) 
         public 
         returns (address instance) 
-    {
+    {   
+        address ms = _msgSender();
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
-        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners);
-        _afterInit(instance);
+        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, ms);
+        _afterInit(instance, ms);
     }
     //////////////////////////////////////////////// AuctionCommunity ////////////////////////////////////////////////
     /**
@@ -181,14 +183,15 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
-        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds);
-        _afterInit(instance);
+        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds, costManager, ms);
+        _afterInit(instance, ms);
     }
 
     /**
@@ -221,14 +224,15 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
-        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds);
-        _afterInit(instance);
+        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds, costManager, ms);
+        _afterInit(instance, ms);
     }
     //////////////////////////////////////////////// AuctionNFT //////////////////////////////////////////////////////
     /**
@@ -259,14 +263,15 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
-        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds);
-        _afterInit(instance);
+        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
+        _afterInit(instance, ms);
     }
 
     /**
@@ -299,14 +304,15 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
-        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds);
-        _afterInit(instance);
+        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
+        _afterInit(instance, ms);
     }
     //////////////////////////////////////////////// AuctionSubscription /////////////////////////////////////////////
     /**
@@ -337,14 +343,15 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
-        _afterInit(instance);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished, costManager, ms);
+        _afterInit(instance, ms);
     }
 
     /**
@@ -377,14 +384,15 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         public 
         returns (address instance) 
     {
+        address ms = _msgSender();
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished);
-        _afterInit(instance);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished, costManager, ms);
+        _afterInit(instance, ms);
     }
 
     function doCharge(
@@ -451,9 +459,11 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         require(endTime > block.timestamp, "invalid time");
     }
     
-    function _afterInit(address instance) internal {
+    function _afterInit(address instance, address sender) internal {
         //-- register instance in release manager
         registerInstance(instance);
+        //-- transferownership to sender
+        Ownable(instance).transferOwnership(sender);
         //-----------------
     }
 }
