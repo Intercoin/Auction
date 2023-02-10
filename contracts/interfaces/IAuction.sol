@@ -10,9 +10,8 @@ interface IAuction is IAuctionBase {
         uint64 endTime,
         uint256 startingPrice,
         Increase calldata increase,
-        uint32 maxWinners,
-        SubscriptionManager manager,
-        bool subscribeEvenIfNotFinished
+        uint32 maxWinners
     ) external;
-   
+    
+    /*should not be claim method */   
 }

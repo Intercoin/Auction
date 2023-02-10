@@ -12,8 +12,6 @@ interface IAuctionNFT is IAuctionBase {
         uint256 startingPrice,
         Increase calldata increase,
         uint32 maxWinners,
-        SubscriptionManager manager,
-        bool subscribeEvenIfNotFinished,
         INFT nft,
         uint256[] calldata tokenIds
     ) external;

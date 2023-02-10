@@ -2,9 +2,9 @@
 
 pragma solidity >=0.8.0 <0.9.0;
 import "./IAuctionBase.sol";
-import "@artman325/community/contracts/interfaces/ICommunity.sol";
+import "@artman325/subscriptioncontract/contracts/interfaces/ISubscriptionsManager.sol";
 
-interface IAuctionCommunity is IAuctionBase {
+interface IAuctionSubscription is IAuctionBase {
     function initialize(
         bool cancelable,
         uint64 startTime,
@@ -12,8 +12,10 @@ interface IAuctionCommunity is IAuctionBase {
         uint256 startingPrice,
         Increase calldata increase,
         uint32 maxWinners,
-        ICommunity community,
-        uint8[] calldata roleIds
+        ISubscriptionsManager manager,
+        bool subscribeEvenIfNotFinished
+        // INFT nft,
+        // uint256[] calldata tokenIds
     ) external;
    
 }
