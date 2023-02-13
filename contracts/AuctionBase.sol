@@ -18,6 +18,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     error ChargeFailed();
     error BidTooSmall();
     error NotWinning();
+    error AlreadyClaimed();
     error SubscribeFailed();
     error NotCancelable();
     error CannotBidAboveCurrentPrice();
@@ -45,7 +46,12 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     BidStruct[] public bids;
     uint32 public maxWinners;
     uint32 public winningSmallestIndex; // starts at 1
-    mapping (address => uint32) winningBidIndex; // 1-based index, thus 0 means not winning
+
+    struct WinningStruct {
+        uint32 bidIndex;
+        bool claimed;
+    }
+    mapping (address => WinningStruct) winningBidIndex; // 1-based index, thus 0 means not winning
 
     // Constants for shifts
     uint8 internal constant SERIES_SHIFT_BITS = 192; // 256 - 64
@@ -54,14 +60,13 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     // Constants representing operations
     uint8 internal constant OPERATION_INITIALIZE = 0x0;
     
-
     function __AuctionBase_init(
         address token_,
         bool cancelable_,
         uint64 startTime_,
         uint64 endTime_,
         uint256 startingPrice_,
-        Increase calldata increase_,
+        Increase memory increase_,
         uint32 maxWinners_, 
         address costManager,
         address producedBy
@@ -99,7 +104,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     function bid(uint256 amount) payable public {
         
         address ms = _msgSender();
-        uint32 index = winningBidIndex[ms];
+        uint32 index = winningBidIndex[ms].bidIndex;
         if (index > 0) {
             emit AlreadyWinning(ms, index);
             return;
@@ -135,7 +140,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
 
         bids.push(BidStruct(ms, amount));
 
-        winningBidIndex[ms] = uint32(bids.length) - 1;
+        winningBidIndex[ms].bidIndex = uint32(bids.length) - 1;
         emit Bid(ms, amount, uint32(bids.length) - 1);
         
     }
@@ -177,6 +182,23 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         IERC20Upgradeable(token).transfer(recipient, totalContractBalance);
     }
     
+    function requireWinner(address sender) internal view {
+        if (canceled) {
+            revert AuctionWasCanceled();
+        }
+        if (block.timestamp < endTime) {
+            revert AuctionNotFinished();
+        }
+        
+        if (winningBidIndex[sender].bidIndex == 0) {
+            revert NotWinning();
+        }
+        if (winningBidIndex[sender].claimed == true) {
+            revert AlreadyClaimed();
+        }
+
+    }
+    
     function _charge(address payer, uint256 amount) private {
         bool success = IAuctionFactory(deployer).doCharge(token, amount, payer, owner());
         if (!success) {
@@ -200,4 +222,5 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         delete winningBidIndex[b.bidder];
         ++winningSmallestIndex;
     }
+ 
 }

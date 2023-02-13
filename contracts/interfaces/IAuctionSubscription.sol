@@ -11,7 +11,7 @@ interface IAuctionSubscription is IAuctionBase {
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        Increase calldata increase,
+        Increase memory increase,
         uint32 maxWinners,
         ISubscriptionsManager manager,
         bool subscribeEvenIfNotFinished, 

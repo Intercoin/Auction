@@ -10,7 +10,7 @@ interface IAuction is IAuctionBase {
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        Increase calldata increase,
+        Increase memory increase,
         uint32 maxWinners, 
         address costManager,
         address producedBy

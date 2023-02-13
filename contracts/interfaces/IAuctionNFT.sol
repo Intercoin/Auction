@@ -11,12 +11,14 @@ interface IAuctionNFT is IAuctionBase {
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        Increase calldata increase,
+        Increase memory increase,
         uint32 maxWinners,
         INFT nft,
-        uint256[] calldata tokenIds, 
+        uint256[] memory tokenIds, 
         address costManager,
         address producedBy
     ) external;
-   
+
+    function NFTclaim(address NFT, uint256 tokenId) external;
+    function NFTtransfer(address NFT, uint256 tokenId, address recipient) external;
 }

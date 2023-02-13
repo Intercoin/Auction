@@ -107,7 +107,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuction.Increase calldata increase,
+        IAuction.Increase memory increase,
         uint32 maxWinners
     ) 
         public 
@@ -141,7 +141,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuction.Increase calldata increase,
+        IAuction.Increase memory increase,
         uint32 maxWinners
     ) 
         public 
@@ -175,10 +175,10 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuctionCommunity.Increase calldata increase,
+        IAuctionCommunity.Increase memory increase,
         uint32 maxWinners,
         ICommunity community,
-        uint8[] calldata roleIds
+        uint8[] memory roleIds
     ) 
         public 
         returns (address instance) 
@@ -216,10 +216,10 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuctionCommunity.Increase calldata increase,
+        IAuctionCommunity.Increase memory increase,
         uint32 maxWinners,
         ICommunity community,
-        uint8[] calldata roleIds
+        uint8[] memory roleIds
     ) 
         public 
         returns (address instance) 
@@ -255,10 +255,10 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuctionNFT.Increase calldata increase,
+        IAuctionNFT.Increase memory increase,
         uint32 maxWinners,
         INFT nft,
-        uint256[] calldata tokenIds
+        uint256[] memory tokenIds
     ) 
         public 
         returns (address instance) 
@@ -296,10 +296,10 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuctionNFT.Increase calldata increase,
+        IAuctionNFT.Increase memory increase,
         uint32 maxWinners,
         INFT nft,
-        uint256[] calldata tokenIds
+        uint256[] memory tokenIds
     ) 
         public 
         returns (address instance) 
@@ -335,7 +335,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuctionSubscription.Increase calldata increase,
+        IAuctionSubscription.Increase memory increase,
         uint32 maxWinners,
         ISubscriptionsManager manager,
         bool subscribeEvenIfNotFinished
@@ -376,7 +376,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint64 startTime,
         uint64 endTime,
         uint256 startingPrice,
-        IAuctionSubscription.Increase calldata increase,
+        IAuctionSubscription.Increase memory increase,
         uint32 maxWinners,
         ISubscriptionsManager manager,
         bool subscribeEvenIfNotFinished
