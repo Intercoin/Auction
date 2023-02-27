@@ -207,7 +207,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     }
     
     function _charge(address payer, uint256 amount) private {
-        bool success = IAuctionFactory(deployer).doCharge(token, amount, payer, owner());
+        bool success = IAuctionFactory(deployer).doCharge(token, amount, payer, address(this));
         if (!success) {
             revert ChargeFailed();
         }
