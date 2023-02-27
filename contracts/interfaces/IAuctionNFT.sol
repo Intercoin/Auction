@@ -2,9 +2,9 @@
 
 pragma solidity >=0.8.0 <0.9.0;
 import "./IAuctionBase.sol";
-import "@artman325/nonfungibletokencontract/contracts/interfaces/INFT.sol";
 
 interface IAuctionNFT is IAuctionBase {
+    enum NFTState {NONE, NOT_CLAIMED, CLAIMED}
     function initialize(
         address token,
         bool cancelable,
@@ -13,12 +13,12 @@ interface IAuctionNFT is IAuctionBase {
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners,
-        INFT nft,
+        address nft,
         uint256[] memory tokenIds, 
         address costManager,
         address producedBy
     ) external;
 
-    function NFTclaim(address NFT, uint256 tokenId) external;
-    function NFTtransfer(address NFT, uint256 tokenId, address recipient) external;
+    function NFTclaim(uint256 tokenId) external;
+    function NFTtransfer(uint256 tokenId, address recipient) external;
 }

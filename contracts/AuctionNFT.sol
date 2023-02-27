@@ -2,10 +2,14 @@
 pragma solidity >=0.8.18;
 import "./AuctionBase.sol";
 import "./interfaces/IAuctionNFT.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 
 contract AuctionNFT is AuctionBase, IAuctionNFT {
-    INFT public nftContract;
+    error NFTAlreadyClaimed();
+    error NFTNotFound();
+
+    ERC721Upgradeable public nftContract;
+    mapping(uint256 => NFTState) private tokenIds;
     function initialize(
         address token,
         bool cancelable,
@@ -14,33 +18,50 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners,
-        INFT nft,
-        uint256[] memory tokenIds, 
+        address nft,
+        uint256[] memory tokenIds_, 
         address costManager,
         address producedBy
     ) external {
         __AuctionBase_init(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, producedBy);
 
-        nftContract = nft;
+        nftContract = ERC721Upgradeable(nft);
+
+        for(uint256 i = 0; i < tokenIds_.length; i++) {
+            tokenIds[tokenIds_[i]] = NFTState.NOT_CLAIMED;
+        } 
     }
 
     // auction winners can claim any NFT owned by the auction,
     // and shouldn't bid unless the count > maxWinners
-    function NFTclaim(address nft, uint256 tokenId) external {
+    function NFTclaim(uint256 tokenId) external {
         address sender = _msgSender();
         requireWinner(_msgSender());
         winningBidIndex[sender].claimed = true;
+        
+        checkNFT(tokenId);
 
-        IERC721Upgradeable(nft).safeTransferFrom(address(this), sender, tokenId); // will revert if not owned
+        nftContract.safeTransferFrom(address(this), sender, tokenId); // will revert if not owned
     }
 
     // auction owner can send the NFTs anywhere if auction was canceled
     // the auction owner would typically have been owner of all the NFTs sent to it
-    function NFTtransfer(address nft, uint256 tokenId, address recipient) external onlyOwner {
+    function NFTtransfer(uint256 tokenId, address recipient) external onlyOwner {
         if (!canceled) {
             revert AuctionNotCanceled();
         }
-        IERC721Upgradeable(nft).safeTransferFrom(address(this), _msgSender(), tokenId);
+        checkNFT(tokenId);
+        nftContract.safeTransferFrom(address(this), recipient, tokenId);
         
+    }
+
+    function checkNFT(uint256 tokenId) private {
+        if (tokenIds[tokenId] == NFTState.NONE) {
+            revert NFTNotFound();
+        }
+        if (tokenIds[tokenId] == NFTState.NOT_CLAIMED) {
+            revert NFTAlreadyClaimed();
+        }
+        tokenIds[tokenId] = NFTState.CLAIMED;
     }
 }
