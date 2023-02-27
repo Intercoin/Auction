@@ -22,7 +22,10 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
         uint256[] memory tokenIds_, 
         address costManager,
         address producedBy
-    ) external {
+    ) 
+        external 
+        initializer 
+    {
         __AuctionBase_init(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, producedBy);
 
         nftContract = ERC721Upgradeable(nft);
@@ -36,11 +39,9 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
     // and shouldn't bid unless the count > maxWinners
     function NFTclaim(uint256 tokenId) external {
         address sender = _msgSender();
-        requireWinner(_msgSender());
-        winningBidIndex[sender].claimed = true;
+        _claim(sender);
         
         checkNFT(tokenId);
-
         nftContract.safeTransferFrom(address(this), sender, tokenId); // will revert if not owned
     }
 

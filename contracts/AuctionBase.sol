@@ -72,7 +72,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         address producedBy
     ) 
         internal
-        initializer
+        
     {
         __Ownable_init();
         __ReentrancyGuard_init();
@@ -181,7 +181,14 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         uint256 totalContractBalance = IERC20Upgradeable(token).balanceOf(address(this));
         IERC20Upgradeable(token).transfer(recipient, totalContractBalance);
     }
-    
+   
+    // should be call in any variant of claim
+    // validation sender as winner, setup sender as already claimed  etc
+    function _claim(address sender) internal {
+        requireWinner(sender);
+        winningBidIndex[sender].claimed = true;
+    }
+     
     function requireWinner(address sender) internal view {
         if (canceled) {
             revert AuctionWasCanceled();
@@ -222,5 +229,5 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         delete winningBidIndex[b.bidder];
         ++winningSmallestIndex;
     }
- 
+
 }
