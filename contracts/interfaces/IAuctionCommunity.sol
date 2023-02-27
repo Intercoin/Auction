@@ -2,7 +2,6 @@
 
 pragma solidity >=0.8.0 <0.9.0;
 import "./IAuctionBase.sol";
-import "@artman325/community/contracts/interfaces/ICommunity.sol";
 
 interface IAuctionCommunity is IAuctionBase {
     function initialize(
@@ -13,7 +12,7 @@ interface IAuctionCommunity is IAuctionBase {
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners,
-        ICommunity community,
+        address community,
         uint8[] memory roleIds, 
         address costManager,
         address producedBy
