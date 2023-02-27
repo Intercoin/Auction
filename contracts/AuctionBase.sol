@@ -26,7 +26,6 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     error AuctionWasCanceled();
     error AuctionNotCanceled();
     error AuctionNotFinished();
-    error SubscriptionManagerMissing();
     error MaximumBidsAmountExceeded();
 
     //address factory;

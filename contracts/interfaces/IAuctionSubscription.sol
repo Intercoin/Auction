@@ -2,9 +2,11 @@
 
 pragma solidity >=0.8.0 <0.9.0;
 import "./IAuctionBase.sol";
-import "@artman325/subscriptioncontract/contracts/interfaces/ISubscriptionsManager.sol";
 
 interface IAuctionSubscription is IAuctionBase {
+
+    error SubscriptionManagerMissing();
+
     function initialize(
         address token,
         bool cancelable,
@@ -13,8 +15,7 @@ interface IAuctionSubscription is IAuctionBase {
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners,
-        ISubscriptionsManager manager,
-        bool subscribeEvenIfNotFinished, 
+        address subscriptionManager,
         address costManager,
         address producedBy
     ) external;
