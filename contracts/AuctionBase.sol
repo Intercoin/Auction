@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "./interfaces/IAuctionBase.sol";
 import "./interfaces/IAuctionFactory.sol";
 import "@artman325/releasemanager/contracts/CostManagerHelper.sol";
-    
+//import "hardhat/console.sol";
 contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHelper, OwnableUpgradeable {
 
     event AlreadyWinning(address bidder, uint256 index);
@@ -97,6 +97,8 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         priceIncrease.canBidAboveIncrease = increase_.canBidAboveIncrease;
         maxWinners = maxWinners_;
 
+        winningBidIndex[address(0)].bidIndex = 0;
+
         _accountForOperation(
             OPERATION_INITIALIZE << OPERATION_SHIFT_BITS,
             uint256(uint160(producedBy)),
@@ -108,6 +110,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         
         address ms = _msgSender();
         uint32 index = winningBidIndex[ms].bidIndex;
+
         if (index > 0) {
             emit AlreadyWinning(ms, index);
             return;
@@ -131,9 +134,10 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         if (bids.length % priceIncrease.numBids == 0) {
             currentPrice += priceIncrease.amount; // every so often
         }
-
-        if (bids.length > maxWinners + 1) {
+        
+        if (bids.length + 1 > maxWinners) {
             _refundBid(winningSmallestIndex);
+            winningSmallestIndex++;
         }
 
         if (bids.length > type(uint32).max) {
@@ -143,15 +147,16 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
 
         bids.push(BidStruct(ms, amount));
 
-        winningBidIndex[ms].bidIndex = uint32(bids.length) - 1;
-        emit Bid(ms, amount, uint32(bids.length) - 1);
+        winningBidIndex[ms].bidIndex = uint32(bids.length)/* - 1*/;
+        emit Bid(ms, amount, uint32(bids.length));
         
     }
 
     // return winning bids, from largest to smallest
     function winning() external view returns (BidStruct[] memory result) {
         uint32 l = uint32(bids.length);
-        result = new BidStruct[](l-1-winningSmallestIndex);
+       
+        result = new BidStruct[](l-winningSmallestIndex);
         uint256 ii = 0;
         for (uint32 i=l-1; i >= winningSmallestIndex; --i) {
             result[ii] = bids[i];
@@ -176,6 +181,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         if (block.timestamp < endTime) {
             revert AuctionNotFinished();
         }
+
         // if (token == address(0)) {
         //     send(recipient, this.balance);
         // } else {
@@ -230,7 +236,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         //bids[winningSmallestIndex] = 0; // or maybe use delete
         delete bids[winningSmallestIndex];
         delete winningBidIndex[b.bidder];
-        ++winningSmallestIndex;
+        
     }
 
 }

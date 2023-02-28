@@ -404,6 +404,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         
         // we shoud not revert transaction, just return failed condition of `transferFrom` attempt
         bytes memory data = abi.encodeWithSelector(IERC20(targetToken).transferFrom.selector, from, to, amount);
+
         (bool success, bytes memory returndata) = address(targetToken).call{value: 0}(data);
 
         if (success) {
