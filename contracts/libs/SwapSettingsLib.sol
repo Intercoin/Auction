@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 library SwapSettingsLib {
     function netWorkSettings(
     )
-        external
+        internal
         view
         returns(address, address, address, uint256 k1, uint256 k2, uint256 k3, uint256 k4)
     {

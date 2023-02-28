@@ -59,6 +59,10 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     // Constants representing operations
     uint8 internal constant OPERATION_INITIALIZE = 0x0;
     
+    constructor() {
+        _disableInitializers();
+    }
+    
     function __AuctionBase_init(
         address token_,
         bool cancelable_,

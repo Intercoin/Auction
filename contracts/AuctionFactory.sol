@@ -15,7 +15,7 @@ import "./interfaces/IAuctionCommunity.sol";
 import "./interfaces/IAuctionSubscription.sol";
 import "./interfaces/IAuctionFactory.sol";
 
-
+//import "hardhat/console.sol";
 contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuctionFactory {
     using Clones for address;
     using Address for address;
@@ -117,6 +117,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         instance = address(implementationAuction).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
+
         IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, ms);
         _afterInit(instance, ms);
     }
@@ -177,7 +178,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint256 startingPrice,
         IAuctionCommunity.Increase memory increase,
         uint32 maxWinners,
-        ICommunity community,
+        address community,
         uint8[] memory roleIds
     ) 
         public 
@@ -218,7 +219,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint256 startingPrice,
         IAuctionCommunity.Increase memory increase,
         uint32 maxWinners,
-        ICommunity community,
+        address community,
         uint8[] memory roleIds
     ) 
         public 
@@ -257,7 +258,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint256 startingPrice,
         IAuctionNFT.Increase memory increase,
         uint32 maxWinners,
-        INFT nft,
+        address nft,
         uint256[] memory tokenIds
     ) 
         public 
@@ -298,7 +299,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint256 startingPrice,
         IAuctionNFT.Increase memory increase,
         uint32 maxWinners,
-        INFT nft,
+        address nft,
         uint256[] memory tokenIds
     ) 
         public 
@@ -325,7 +326,6 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     * @param increase incresetuple [amount, bidsCount, canBidAbove] how much will the price increase `amount` after `bidsCount` bids happens
     * @param maxWinners maximum winners
     * @param manager subscription contract
-    * @param subscribeEvenIfNotFinished do subscribe even if auction not finished
     * @return instance address of created instance `AuctionSubscription`
     * @custom:shortd creation AuctionSubscription instance
     */
@@ -337,8 +337,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint256 startingPrice,
         IAuctionSubscription.Increase memory increase,
         uint32 maxWinners,
-        ISubscriptionsManager manager,
-        bool subscribeEvenIfNotFinished
+        address manager
     ) 
         public 
         returns (address instance) 
@@ -350,7 +349,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished, costManager, ms);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, costManager, ms);
         _afterInit(instance, ms);
     }
 
@@ -365,7 +364,6 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
     * @param increase incresetuple [amount, bidsCount, canBidAbove] how much will the price increase `amount` after `bidsCount` bids happens
     * @param maxWinners maximum winners
     * @param manager subscription contract
-    * @param subscribeEvenIfNotFinished do subscribe even if auction not finished
     * @return instance address of created instance `AuctionSubscription`
     * @custom:shortd creation AuctionSubscription instance
     */
@@ -378,8 +376,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         uint256 startingPrice,
         IAuctionSubscription.Increase memory increase,
         uint32 maxWinners,
-        ISubscriptionsManager manager,
-        bool subscribeEvenIfNotFinished
+        address manager
     ) 
         public 
         returns (address instance) 
@@ -391,7 +388,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, subscribeEvenIfNotFinished, costManager, ms);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, costManager, ms);
         _afterInit(instance, ms);
     }
 

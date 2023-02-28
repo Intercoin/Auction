@@ -9,7 +9,7 @@ import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
 
 
 contract AuctionSubscription is AuctionBase, IAuctionSubscription {
-
+    
     ISubscriptionsManagerUpgradeable public subscriptionManager; // for subscribe function
 
     address internal wethAddr;
