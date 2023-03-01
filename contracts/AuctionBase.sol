@@ -102,6 +102,8 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         maxWinners = maxWinners_;
 
         winningBidIndex[address(0)].bidIndex = 0;
+        bids.push(BidStruct(address(0), 0));
+        winningSmallestIndex++;
 
         _accountForOperation(
             OPERATION_INITIALIZE << OPERATION_SHIFT_BITS,
@@ -139,7 +141,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
             currentPrice += priceIncrease.amount; // every so often
         }
         
-        if (bids.length + 1 > maxWinners) {
+        if (bids.length > maxWinners) {
             _refundBid(winningSmallestIndex);
             winningSmallestIndex++;
         }
@@ -151,7 +153,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
 
         bids.push(BidStruct(ms, amount));
 
-        winningBidIndex[ms].bidIndex = uint32(bids.length)/* - 1*/;
+        winningBidIndex[ms].bidIndex = uint32(bids.length) - 1;
         emit Bid(ms, amount, uint32(bids.length));
         
     }
@@ -159,7 +161,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     // return winning bids, from largest to smallest
     function winning() external view returns (BidStruct[] memory result) {
         uint32 l = uint32(bids.length);
-       
+        
         result = new BidStruct[](l-winningSmallestIndex);
         uint256 ii = 0;
         for (uint32 i=l-1; i >= winningSmallestIndex; --i) {

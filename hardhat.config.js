@@ -26,7 +26,8 @@ module.exports = {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: false,
-      gas: "auto",
+      //gas: "auto",
+      gas: 2100000,
       gasLimit: 22000000,
       forking: {
         url: mainnetURL,

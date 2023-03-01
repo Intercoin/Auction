@@ -31,7 +31,7 @@ const FRACTION = BigNumber.from('10000');
 
 chai.use(require('chai-bignumber')());
 
-describe("TradedTokenInstance", function () {
+describe("AuctionInstance", function () {
     const accounts = waffle.provider.getWallets();
 
     const owner = accounts[0];                     
@@ -333,7 +333,7 @@ describe("TradedTokenInstance", function () {
             let AuctionFactoryF = await ethers.getContractFactory("AuctionFactory");
             let AuctionF = await ethers.getContractFactory("MockAuction");
             let AuctionCommunityF = await ethers.getContractFactory("AuctionCommunity");
-            let AuctionNFTF = await ethers.getContractFactory("AuctionNFT");
+            let AuctionNFTF = await ethers.getContractFactory("MockAuctionNFT");
             let AuctionSubscriptionF = await ethers.getContractFactory("AuctionSubscription");
 
             // let SubscriptionsManagerFactoryF = await ethers.getContractFactory("MockSubscriptionsManagerFactory");
@@ -409,12 +409,12 @@ describe("TradedTokenInstance", function () {
 
             // put several bids
             let addresses = [
-                owner,
-                alice,
-                bob,
-                charlie,
-                david,
-                recipient
+                owner,  //1
+                alice,  //1
+                bob,    //1
+                charlie,//2
+                david,  //3
+                recipient//4
             ];
             
             let tmp2Bid;
@@ -427,7 +427,7 @@ describe("TradedTokenInstance", function () {
                 
                 await auctionInstance.connect(addresses[i]).bid(tmp2Bid);
 
-                expect(await auctionInstance.getWinningSmallestIndex()).to.be.eq(i >= MaxWinners ? i - MaxWinners + 1 : 0);
+                expect(await auctionInstance.getWinningSmallestIndex()).to.be.eq(i >= MaxWinners ? i - MaxWinners + 2 : 1);
             }
             
             let winning = await auctionInstance.winning();
@@ -630,5 +630,70 @@ describe("TradedTokenInstance", function () {
 
         });
 
+        it("make sure the right people are refunded", async() => {
+            let mockNFTF = await ethers.getContractFactory("MockNFT");
+            let mockNFT = await mockNFTF.deploy();
+            await mockNFT.init("name", "symbol");
+            await releaseManager.connect(owner).customRegisterInstance(mockNFT.address);
+            //
+            const MaxWinners = 2;
+            let currentTime = await mockUseful.currentBlockTimestamp();
+            let startingPrice = ONE_ETH;
+            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let tokenIdtoClaim = 3;
+            let tokenIds = [1,2,tokenIdtoClaim];
+            p = [
+                erc20.address,          // address token,
+                false,                  // bool cancelable,
+                currentTime,            // uint64 startTime,
+                currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
+                startingPrice,          // uint256 startingPrice,
+                [
+                   increasePrice,   // can't increase by over half the range
+                   TEN,             // increase after this many bids
+                   true             // bool canBidAboveIncrease;
+                ],
+                MaxWinners,             // uint32 maxWinners,
+                mockNFT.address,        // address nft,
+                tokenIds                // uint256[] memory tokenIds
+            ];
+
+            let tx = await AuctionFactory.connect(owner).produceAuctionNFT(...p);
+
+            const rc = await tx.wait(); // 0ms, as tx is already confirmed
+            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const [instance,] = event.args;
+            expect(instance).not.to.be.eq(ZERO_ADDRESS);
+            
+            let auctionInstance = await ethers.getContractAt("MockAuctionNFT",instance);
+
+            let tmp2Bid = startingPrice.add(increasePrice);
+            await erc20.mint(alice.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await auctionInstance.connect(alice).bid(tmp2Bid);
+
+            tmp2Bid = startingPrice.add(increasePrice.mul(TWO));
+            await erc20.mint(bob.address, tmp2Bid);
+            await erc20.connect(bob).approve(AuctionFactory.address, tmp2Bid);
+            let balanceBobBeforeBid = await erc20.balanceOf(bob.address);
+            await auctionInstance.connect(bob).bid(tmp2Bid);
+            let balanceBobAfterBid = await erc20.balanceOf(bob.address);
+
+            //pass 86400 seconds
+            await network.provider.send("evm_increaseTime", [parseInt(86400)]);
+            await network.provider.send("evm_mine"); // this one will have 02:00 PM as its timestamp
+
+            await auctionInstance.connect(bob).NFTclaim(tokenIdtoClaim);
+
+            let balanceBobAfterClaim = await erc20.balanceOf(bob.address);
+
+            expect(balanceBobBeforeBid).not.to.be.eq(balanceBobAfterBid);
+            expect(balanceBobBeforeBid).to.be.eq(balanceBobAfterClaim);
+
+            // console.log("balanceBobBeforeBid    = ", balanceBobBeforeBid.toString());
+            // console.log("balanceBobAfterBid     = ", balanceBobAfterBid.toString());
+            // console.log("balanceBobAfterClaim   = ", balanceBobAfterClaim.toString());
+        });
     });
 });
