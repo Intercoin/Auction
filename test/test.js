@@ -42,7 +42,7 @@ describe("TradedTokenInstance", function () {
     const recipient = accounts[5];
     
     const NO_COSTMANAGER = ZERO_ADDRESS;
-    
+    const NO_CLAIM_PERIOD = 0;
     var tmp;
 
     describe("factory produce", function () {
@@ -124,6 +124,7 @@ describe("TradedTokenInstance", function () {
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
                 currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
                 ONE_ETH,                // uint256 startingPrice,
                 // IAuction.Increase memory increase,
                 // struct Increase {
@@ -240,7 +241,7 @@ describe("TradedTokenInstance", function () {
             let pWithWrongController;
             let currentTime = await mockUseful.currentBlockTimestamp();
             pWithWrongControllerAsEOAUser = [
-                erc20.address,false,currentTime,currentTime.add(86400),ONE_ETH,[ONE_ETH.div(TEN),TEN,false],FIVE,
+                erc20.address,false,currentTime,currentTime.add(86400),NO_CLAIM_PERIOD,ONE_ETH,[ONE_ETH.div(TEN),TEN,false],FIVE,
                 recipient.address, //address community,
                 [1,2,3] //uint8[] memory roleIds
             ];
@@ -249,7 +250,7 @@ describe("TradedTokenInstance", function () {
             ).to.be.revertedWith(`UnauthorizedContract("${recipient.address}")`);
 
             pWithWrongControllerAsERC20 = [
-                erc20.address,false,currentTime,currentTime.add(86400),ONE_ETH,[ONE_ETH.div(TEN),TEN,false],FIVE,
+                erc20.address,false,currentTime,currentTime.add(86400),NO_CLAIM_PERIOD,ONE_ETH,[ONE_ETH.div(TEN),TEN,false],FIVE,
                 erc20.address, //address controller,
                 [1,2,3] //uint8[] memory roleIds
             ];
@@ -387,6 +388,7 @@ describe("TradedTokenInstance", function () {
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
                 currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
                    increasePrice,// can't increase by over half the range
@@ -443,6 +445,7 @@ describe("TradedTokenInstance", function () {
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
                 currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
                    increasePrice,// can't increase by over half the range
@@ -496,6 +499,7 @@ describe("TradedTokenInstance", function () {
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
                 currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
                    increasePrice,// can't increase by over half the range
@@ -542,6 +546,7 @@ describe("TradedTokenInstance", function () {
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
                 currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
                    increasePrice,// can't increase by over half the range
@@ -590,6 +595,7 @@ describe("TradedTokenInstance", function () {
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
                 currentTime.add(86400), // uint64 endTime,
+                NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
                    increasePrice,// can't increase by over half the range

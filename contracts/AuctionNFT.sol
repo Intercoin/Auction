@@ -15,6 +15,7 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners,
@@ -26,7 +27,7 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
         external 
         initializer 
     {
-        __AuctionBase_init(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, producedBy);
+        __AuctionBase_init(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, costManager, producedBy);
 
         nftContract = ERC721Upgradeable(nft);
 

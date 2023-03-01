@@ -106,6 +106,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuction.Increase memory increase,
         uint32 maxWinners
@@ -118,7 +119,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         _beforeInit(instance);
         _validateParams(token, endTime);
 
-        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, ms);
+        IAuction(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, costManager, ms);
         _afterInit(instance, ms);
     }
 
@@ -141,6 +142,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuction.Increase memory increase,
         uint32 maxWinners
@@ -152,7 +154,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         instance = address(implementationAuction).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
-        IAuction(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, ms);
+        IAuction(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, costManager, ms);
         _afterInit(instance, ms);
     }
     //////////////////////////////////////////////// AuctionCommunity ////////////////////////////////////////////////
@@ -175,6 +177,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuctionCommunity.Increase memory increase,
         uint32 maxWinners,
@@ -191,7 +194,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
-        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds, costManager, ms);
+        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, community, roleIds, costManager, ms);
         _afterInit(instance, ms);
     }
 
@@ -216,6 +219,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuctionCommunity.Increase memory increase,
         uint32 maxWinners,
@@ -232,7 +236,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(community));
         ////////////////
-        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, community, roleIds, costManager, ms);
+        IAuctionCommunity(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, community, roleIds, costManager, ms);
         _afterInit(instance, ms);
     }
     //////////////////////////////////////////////// AuctionNFT //////////////////////////////////////////////////////
@@ -255,6 +259,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuctionNFT.Increase memory increase,
         uint32 maxWinners,
@@ -271,7 +276,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
-        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
+        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
         _afterInit(instance, ms);
     }
 
@@ -296,6 +301,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuctionNFT.Increase memory increase,
         uint32 maxWinners,
@@ -312,7 +318,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
-        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
+        IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
         _afterInit(instance, ms);
     }
     //////////////////////////////////////////////// AuctionSubscription /////////////////////////////////////////////
@@ -334,6 +340,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuctionSubscription.Increase memory increase,
         uint32 maxWinners,
@@ -349,7 +356,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, costManager, ms);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, manager, costManager, ms);
         _afterInit(instance, ms);
     }
 
@@ -373,6 +380,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         IAuctionSubscription.Increase memory increase,
         uint32 maxWinners,
@@ -388,7 +396,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         ////////////////
         isInOurEcosystem(address(manager));
         ////////////////
-        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, manager, costManager, ms);
+        IAuctionSubscription(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, manager, costManager, ms);
         _afterInit(instance, ms);
     }
 

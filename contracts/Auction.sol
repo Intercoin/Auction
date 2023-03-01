@@ -8,6 +8,7 @@ contract Auction is AuctionBase, IAuction {
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners, 
@@ -17,6 +18,6 @@ contract Auction is AuctionBase, IAuction {
         external 
         initializer 
     {
-        __AuctionBase_init(token, cancelable, startTime, endTime, startingPrice, increase, maxWinners, costManager, producedBy);
+        __AuctionBase_init(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, costManager, producedBy);
     }
 }

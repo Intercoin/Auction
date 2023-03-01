@@ -9,6 +9,7 @@ interface IAuction is IAuctionBase {
         bool cancelable,
         uint64 startTime,
         uint64 endTime,
+        uint64 claimPeriod,
         uint256 startingPrice,
         Increase memory increase,
         uint32 maxWinners, 
