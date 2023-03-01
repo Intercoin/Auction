@@ -54,7 +54,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         address _implementation,
         address _implementationNFT,
         address _implementationCommunity,
-        address _implementationAuctionSubscription,
+        address _implementationSubscription,
         address _costManager,
         address _releaseManager
     ) 
@@ -64,7 +64,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         implementationAuction = _implementation;
         implementationAuctionNFT = _implementationNFT;
         implementationAuctionCommunity = _implementationCommunity;
-        implementationAuctionSubscription = _implementationAuctionSubscription;
+        implementationAuctionSubscription = _implementationSubscription;
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -188,7 +188,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         returns (address instance) 
     {
         address ms = _msgSender();
-        instance = address(implementationAuction).clone();
+        instance = address(implementationAuctionCommunity).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
@@ -230,7 +230,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         returns (address instance) 
     {
         address ms = _msgSender();
-        instance = address(implementationAuction).cloneDeterministic(salt);
+        instance = address(implementationAuctionCommunity).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
@@ -270,13 +270,16 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         returns (address instance) 
     {
         address ms = _msgSender();
-        instance = address(implementationAuction).clone();
+        instance = address(implementationAuctionNFT).clone();
+        
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
         isInOurEcosystem(address(nft));
         ////////////////
+
         IAuctionNFT(instance).initialize(token, cancelable, startTime, endTime, claimPeriod, startingPrice, increase, maxWinners, nft, tokenIds, costManager, ms);
+        
         _afterInit(instance, ms);
     }
 
@@ -312,7 +315,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         returns (address instance) 
     {
         address ms = _msgSender();
-        instance = address(implementationAuction).cloneDeterministic(salt);
+        instance = address(implementationAuctionNFT).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
@@ -350,7 +353,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         returns (address instance) 
     {
         address ms = _msgSender();
-        instance = address(implementationAuction).clone();
+        instance = address(implementationAuctionSubscription).clone();
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
@@ -390,7 +393,7 @@ contract AuctionFactory is CostManagerFactoryHelper, ReleaseManagerHelper, IAuct
         returns (address instance) 
     {
         address ms = _msgSender();
-        instance = address(implementationAuction).cloneDeterministic(salt);
+        instance = address(implementationAuctionSubscription).cloneDeterministic(salt);
         _beforeInit(instance);
         _validateParams(token, endTime);
         ////////////////
