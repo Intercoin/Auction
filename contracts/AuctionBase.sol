@@ -22,6 +22,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     error SubscribeFailed();
     error NotCancelable();
     error CannotBidAboveCurrentPrice();
+    error CannotWithdrawDuringClaimPeriod();
 
     error AuctionWasCanceled();
     error AuctionNotCanceled();
@@ -38,6 +39,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     bool cancelable;
     uint64 startTime;
     uint64 endTime;
+    uint64 claimPeriod;
     uint256 startingPrice;
     uint256 currentPrice;
     Increase priceIncrease;
@@ -68,6 +70,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         bool cancelable_,
         uint64 startTime_,
         uint64 endTime_,
+        uint64 claimPeriod_,
         uint256 startingPrice_,
         Increase memory increase_,
         uint32 maxWinners_, 
@@ -91,6 +94,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         cancelable = cancelable_;
         startTime = startTime_;
         endTime = endTime_;
+        claimPeriod = claimPeriod_;
         startingPrice = startingPrice_;
         priceIncrease.amount = increase_.amount;
         priceIncrease.numBids = increase_.numBids;
@@ -180,6 +184,9 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
     function withdraw(address recipient) external onlyOwner {
         if (block.timestamp < endTime) {
             revert AuctionNotFinished();
+        }
+        if (block.timestamp < endTime + claimPeriod) {
+            revert CannotWithdrawDuringClaimPeriod();
         }
 
         // if (token == address(0)) {
