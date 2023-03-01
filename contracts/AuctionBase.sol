@@ -182,12 +182,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
 
     // owner withdraws all the money after auction is over
     function withdraw(address recipient) external onlyOwner {
-        if (block.timestamp < endTime) {
-            revert AuctionNotFinished();
-        }
-        if (block.timestamp < endTime + claimPeriod) {
-            revert CannotWithdrawDuringClaimPeriod();
-        }
+        withdrawValidate();
 
         // if (token == address(0)) {
         //     send(recipient, this.balance);
@@ -196,6 +191,31 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         // }
         uint256 totalContractBalance = IERC20Upgradeable(token).balanceOf(address(this));
         IERC20Upgradeable(token).transfer(recipient, totalContractBalance);
+    }
+
+    function withdrawValidate() internal view {
+        if (block.timestamp < endTime) {
+            revert AuctionNotFinished();
+        }
+        
+
+        uint32 l = uint32(bids.length);
+        uint256 numClaimed = 0;
+        for (uint32 i=l-1; i >= winningSmallestIndex; --i) {
+            if (winningBidIndex[bids[i].bidder].claimed == true) {
+                numClaimed++;
+            }
+        }
+
+        if (
+            (block.timestamp >= endTime + claimPeriod) ||
+            (numClaimed == maxWinners) 
+        ) {
+            // pass condition
+        } else {
+            revert CannotWithdrawDuringClaimPeriod();
+        }
+        
     }
    
     // should be call in any variant of claim
