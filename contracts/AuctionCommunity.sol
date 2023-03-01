@@ -61,7 +61,13 @@ contract AuctionCommunity is AuctionBase, IAuctionCommunity {
             }
         }
         
-        communityContract.grantRoles(accounts, roleIndexes); // will revert if not allowed
+        //communityContract.grantRoles(accounts, roleIndexes); // will revert if not allowed
         
+        try communityContract.grantRoles(accounts, roleIndexes) {
+            // all ok
+        } catch {
+            // else if any errors. do refund
+            _refundBid(winningBidIndex[sender].bidIndex);
+        }
     }
 }

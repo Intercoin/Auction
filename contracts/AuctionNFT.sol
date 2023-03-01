@@ -43,7 +43,13 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
         _claim(sender);
         
         checkNFT(tokenId);
-        nftContract.safeTransferFrom(address(this), sender, tokenId); // will revert if not owned
+        //nftContract.safeTransferFrom(address(this), sender, tokenId); // will revert if not owned
+        try nftContract.safeTransferFrom(address(this), sender, tokenId) {
+            // all ok
+        } catch {
+            // else if any errors. do refund
+            _refundBid(winningBidIndex[sender].bidIndex);
+        }
     }
 
     // auction owner can send the NFTs anywhere if auction was canceled

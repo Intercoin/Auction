@@ -57,11 +57,17 @@ contract AuctionSubscription is AuctionBase, IAuctionSubscription {
 
         _spend(sender, index, true);
 
-        subscriptionManager.subscribeFromController(
-            sender, 
-            customPrice, 
-            intervals
-        );
+        // subscriptionManager.subscribeFromController(
+        //     sender, 
+        //     customPrice, 
+        //     intervals
+        // );
+        try subscriptionManager.subscribeFromController(sender, customPrice, intervals) {
+            // all ok
+        } catch {
+            // else if any errors. do refund
+            _refundBid(winningBidIndex[sender].bidIndex);
+        }
         
     }
 

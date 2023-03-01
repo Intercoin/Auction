@@ -221,17 +221,9 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         }
 
     }
-    
-    function _charge(address payer, uint256 amount) private {
-        bool success = IAuctionFactory(deployer).doCharge(token, amount, payer, address(this));
-        if (!success) {
-            revert ChargeFailed();
-        }
-    }
 
     // send back the bids when someone isn't winning anymore
-    function _refundBid(uint32 index) private
-    {
+    function _refundBid(uint32 index) internal {
         BidStruct storage b = bids[index];
         // if (token == address(0)) {
         //     send(b.bidder, b.amount);
@@ -246,4 +238,13 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         
     }
 
+    
+    function _charge(address payer, uint256 amount) private {
+        bool success = IAuctionFactory(deployer).doCharge(token, amount, payer, address(this));
+        if (!success) {
+            revert ChargeFailed();
+        }
+    }
+
+    
 }
