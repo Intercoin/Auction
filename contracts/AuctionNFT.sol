@@ -9,7 +9,7 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
     error NFTNotFound();
 
     ERC721Upgradeable public nftContract;
-    mapping(uint256 => NFTState) private tokenIds;
+    mapping(uint256 => NFTState) private tokenStates;
 
     function initialize(
         address token,
@@ -21,7 +21,7 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
         Increase memory increase,
         uint32 maxWinners,
         address nft,
-        uint256[] memory tokenIds_, 
+        uint256[] memory tokenStates_, 
         address costManager,
         address producedBy
     ) 
@@ -33,8 +33,8 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
 
         nftContract = ERC721Upgradeable(nft);
 
-        for(uint256 i = 0; i < tokenIds_.length; i++) {
-            tokenIds[tokenIds_[i]] = NFTState.NOT_CLAIMED;
+        for(uint256 i = 0; i < tokenStates_.length; i++) {
+            tokenStates[tokenStates_[i]] = NFTState.NOT_CLAIMED;
         } 
     }
 
@@ -68,12 +68,12 @@ contract AuctionNFT is AuctionBase, IAuctionNFT {
 
     function checkNFT(uint256 tokenId) private {
         
-        if (tokenIds[tokenId] == NFTState.NONE) {
+        if (tokenStates[tokenId] == NFTState.NONE) {
             revert NFTNotFound();
         }
-        if (tokenIds[tokenId] == NFTState.CLAIMED) {
+        if (tokenStates[tokenId] == NFTState.CLAIMED) {
             revert NFTAlreadyClaimed();
         }
-        tokenIds[tokenId] = NFTState.CLAIMED;
+        tokenStates[tokenId] = NFTState.CLAIMED;
     }
 }
