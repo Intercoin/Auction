@@ -1,8 +1,6 @@
-const { ethers, waffle } = require('hardhat');
-const { BigNumber } = require('ethers');
 const { expect } = require('chai');
-const chai = require('chai');
-//const { time } = require('@openzeppelin/test-helpers');
+const { time, loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+require("@nomicfoundation/hardhat-chai-matchers");
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const DEAD_ADDRESS = '0x000000000000000000000000000000000000dEaD';
@@ -10,36 +8,42 @@ const UNISWAP_ROUTER_FACTORY_ADDRESS = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA
 const UNISWAP_ROUTER = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
 
 
-const ZERO = BigNumber.from('0');
-const ONE = BigNumber.from('1');
-const TWO = BigNumber.from('2');
-const THREE = BigNumber.from('3');
-const FOURTH = BigNumber.from('4');
-const FIVE = BigNumber.from('5');
-const SIX = BigNumber.from('6');
-const SEVEN = BigNumber.from('7');
-const EIGHT = BigNumber.from('8');
-const NINE = BigNumber.from('9');
-const TEN = BigNumber.from('10');
-const HUN = BigNumber.from('100');
-const THOUSAND = BigNumber.from('1000');
+const ZERO = BigInt('0');
+const ONE = BigInt('1');
+const TWO = BigInt('2');
+const THREE = BigInt('3');
+const FOURTH = BigInt('4');
+const FIVE = BigInt('5');
+const SIX = BigInt('6');
+const SEVEN = BigInt('7');
+const EIGHT = BigInt('8');
+const NINE = BigInt('9');
+const TEN = BigInt('10');
+const HUN = BigInt('100');
+const THOUSAND = BigInt('1000');
 
-const ONE_ETH = TEN.pow(BigNumber.from('18'));
+const ONE_ETH = ethers.parseEther('1');
 
-const FRACTION = BigNumber.from('10000');
-
-
-chai.use(require('chai-bignumber')());
+const FRACTION = BigInt('10000');
 
 describe("AuctionInstance", function () {
-    const accounts = waffle.provider.getWallets();
+    var owner;
+    var alice;
+    var bob;
+    var charlie;
+    var david;
+    var recipient;
 
-    const owner = accounts[0];                     
-    const alice = accounts[1];
-    const bob = accounts[2];
-    const charlie = accounts[3];
-    const david = accounts[4];
-    const recipient = accounts[5];
+    
+    beforeEach("deploying", async() => {
+        const accounts = await ethers.getSigners();
+        owner = accounts[0];                     
+        alice = accounts[1];
+        bob = accounts[2];
+        charlie = accounts[3];
+        david = accounts[4];
+        recipient = accounts[5];
+    })
     
     const NO_COSTMANAGER = ZERO_ADDRESS;
     const NO_CLAIM_PERIOD = 0;
@@ -68,12 +72,12 @@ describe("AuctionInstance", function () {
             
             let implementationReleaseManager    = await ReleaseManagerF.deploy();
 
-            let releaseManagerFactory   = await ReleaseManagerFactoryF.connect(owner).deploy(implementationReleaseManager.address);
+            let releaseManagerFactory   = await ReleaseManagerFactoryF.connect(owner).deploy(implementationReleaseManager.target);
             let tx,rc,event,instance,instancesCount;
             //
             tx = await releaseManagerFactory.connect(owner).produce();
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceProduced');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceProduced');
             [instance, instancesCount] = event.args;
             releaseManager = await ethers.getContractAt("MockReleaseManager",instance);
 
@@ -92,16 +96,16 @@ describe("AuctionInstance", function () {
             AuctionSubscriptionImpl = await AuctionSubscriptionF.connect(owner).deploy();
 
             AuctionFactory = await AuctionFactoryF.connect(owner).deploy(
-                AuctionImpl.address, 
-                AuctionNFTImpl.address, 
-                AuctionCommunityImpl.address, 
-                AuctionSubscriptionImpl.address, 
+                AuctionImpl.target, 
+                AuctionNFTImpl.target, 
+                AuctionCommunityImpl.target, 
+                AuctionSubscriptionImpl.target, 
                 NO_COSTMANAGER, 
-                releaseManager.address
+                releaseManager.target
             );
 
             // 
-            const factoriesList = [AuctionFactory.address];
+            const factoriesList = [AuctionFactory.target];
             const factoryInfo = [
                 [
                     1,//uint8 factoryIndex; 
@@ -120,10 +124,10 @@ describe("AuctionInstance", function () {
 
             let currentTime = await mockUseful.currentBlockTimestamp();
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 ONE_ETH,                // uint256 startingPrice,
                 // IAuction.Increase memory increase,
@@ -133,7 +137,7 @@ describe("AuctionInstance", function () {
                 //     bool canBidAboveIncrease;
                 // }
                 [
-                   ONE_ETH.div(TEN),
+                   ONE_ETH / (TEN),
                    TEN,
                    false
                 ],
@@ -141,7 +145,7 @@ describe("AuctionInstance", function () {
             ];
             
             // rc = await tx.wait(); // 0ms, as tx is already confirmed
-            // event = rc.events.find(event => event.event === 'InstanceCreated');
+            // event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             // [instance, instancesCount] = event.args;
             // SubscriptionsManager = await ethers.getContractAt("SubscriptionsManager",instance);
         });
@@ -151,7 +155,7 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
@@ -162,7 +166,7 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuctionDeterministic(...p);
 
             let rc = await tx.wait(); // 0ms, as tx is already confirmed
-            let event = rc.events.find(event => event.event === 'InstanceCreated');
+            let event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             let [instance,] = event.args;
             
             await expect(AuctionFactory.connect(owner).produceAuctionDeterministic(...p)).to.be.revertedWith('ERC1167: create2 failed');
@@ -177,7 +181,7 @@ describe("AuctionInstance", function () {
             let p1 =[salt, ...p]; // prepend salt into params as first param
             tx = await AuctionFactory.connect(owner).produceAuctionDeterministic(...p1);
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceCreated');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             [instanceWithSalt,] = event.args;
             //revert snapshot
             await ethers.provider.send('evm_revert', [snapId]);
@@ -186,14 +190,14 @@ describe("AuctionInstance", function () {
             // make create2. then create and finally again with salt. 
             tx = await AuctionFactory.connect(owner).produceAuctionDeterministic(...p2);
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceCreated');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             [instanceWithSalt2,] = event.args;
             
             await AuctionFactory.connect(owner).produceAuction(...p);
 
             tx = await AuctionFactory.connect(owner).produceAuctionDeterministic(...p1);
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceCreated');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             [instanceWithSaltAgain,] = event.args;
 
 
@@ -211,11 +215,11 @@ describe("AuctionInstance", function () {
             tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceCreated');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             [instance,] = event.args;
             
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceCreated');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             [instance, instancesCount] = event.args;
             let subscriptionsManager = await ethers.getContractAt("Auction",instance);
 
@@ -241,22 +245,22 @@ describe("AuctionInstance", function () {
             let pWithWrongController;
             let currentTime = await mockUseful.currentBlockTimestamp();
             pWithWrongControllerAsEOAUser = [
-                erc20.address,false,currentTime,currentTime.add(86400),NO_CLAIM_PERIOD,ONE_ETH,[ONE_ETH.div(TEN),TEN,false],FIVE,
+                erc20.target,false,currentTime,currentTime + (86400n),NO_CLAIM_PERIOD,ONE_ETH,[ONE_ETH / (TEN),TEN,false],FIVE,
                 recipient.address, //address community,
                 [1,2,3] //uint8[] memory roleIds
             ];
             await expect(
                 AuctionFactory.connect(owner).produceCommunityAuction(...pWithWrongControllerAsEOAUser)
-            ).to.be.revertedWith(`UnauthorizedContract("${recipient.address}")`);
+            ).to.be.revertedWithCustomError(AuctionFactory, 'UnauthorizedContract').withArgs(recipient.address);
 
             pWithWrongControllerAsERC20 = [
-                erc20.address,false,currentTime,currentTime.add(86400),NO_CLAIM_PERIOD,ONE_ETH,[ONE_ETH.div(TEN),TEN,false],FIVE,
-                erc20.address, //address controller,
+                erc20.target,false,currentTime,currentTime + (86400n),NO_CLAIM_PERIOD,ONE_ETH,[ONE_ETH / (TEN),TEN,false],FIVE,
+                erc20.target, //address controller,
                 [1,2,3] //uint8[] memory roleIds
             ];
             await expect(
                 AuctionFactory.connect(owner).produceCommunityAuction(...pWithWrongControllerAsERC20)
-            ).to.be.revertedWith(`UnauthorizedContract("${erc20.address}")`);
+            ).to.be.revertedWithCustomError(AuctionFactory, 'UnauthorizedContract').withArgs(erc20.target);
 
         });
 
@@ -264,7 +268,7 @@ describe("AuctionInstance", function () {
             let beforeProduce = await AuctionFactory.instancesCount();
             await AuctionFactory.connect(owner).produceAuction(...p);
             let afterProduce = await AuctionFactory.instancesCount();
-            expect(afterProduce).to.be.eq(beforeProduce.add(ONE))
+            expect(afterProduce).to.be.eq(beforeProduce + (ONE))
         });
 
         it("should registered instance in release manager", async() => {
@@ -272,12 +276,12 @@ describe("AuctionInstance", function () {
             tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceCreated');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             [instance,] = event.args;
             
             let success = await releaseManager.checkInstance(instance);
             expect(success).to.be.true;
-            let notSuccess = await releaseManager.checkInstance(erc20.address);
+            let notSuccess = await releaseManager.checkInstance(erc20.target);
             expect(notSuccess).to.be.false;
         });
 
@@ -285,13 +289,13 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(bob).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
 
             let auction = await ethers.getContractAt("Auction",instance);
             let ownerOfInstance = await auction.owner();
-            expect(ownerOfInstance).not.to.be.eq(AuctionFactory.address);
-            expect(ownerOfInstance).not.to.be.eq(owner.address);
+            expect(ownerOfInstance).not.to.be.eq(AuctionFactory.target);
+            expect(ownerOfInstance).not.to.be.eq(owner.target);
             expect(ownerOfInstance).to.be.eq(bob.address);
             
         });
@@ -321,12 +325,12 @@ describe("AuctionInstance", function () {
             
             let implementationReleaseManager    = await ReleaseManagerF.deploy();
 
-            let releaseManagerFactory   = await ReleaseManagerFactoryF.connect(owner).deploy(implementationReleaseManager.address);
+            let releaseManagerFactory   = await ReleaseManagerFactoryF.connect(owner).deploy(implementationReleaseManager.target);
             let tx,rc,event,instance,instancesCount;
             //
             tx = await releaseManagerFactory.connect(owner).produce();
             rc = await tx.wait(); // 0ms, as tx is already confirmed
-            event = rc.events.find(event => event.event === 'InstanceProduced');
+            event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceProduced');
             [instance, instancesCount] = event.args;
             releaseManager = await ethers.getContractAt("MockReleaseManager",instance);
 
@@ -345,16 +349,16 @@ describe("AuctionInstance", function () {
             AuctionSubscriptionImpl = await AuctionSubscriptionF.connect(owner).deploy();
 
             AuctionFactory = await AuctionFactoryF.connect(owner).deploy(
-                AuctionImpl.address, 
-                AuctionNFTImpl.address, 
-                AuctionCommunityImpl.address, 
-                AuctionSubscriptionImpl.address, 
+                AuctionImpl.target, 
+                AuctionNFTImpl.target, 
+                AuctionCommunityImpl.target, 
+                AuctionSubscriptionImpl.target, 
                 NO_COSTMANAGER, 
-                releaseManager.address
+                releaseManager.target
             );
 
             // 
-            const factoriesList = [AuctionFactory.address];
+            const factoriesList = [AuctionFactory.target];
             const factoryInfo = [
                 [
                     1,//uint8 factoryIndex; 
@@ -373,7 +377,7 @@ describe("AuctionInstance", function () {
 
             
             // rc = await tx.wait(); // 0ms, as tx is already confirmed
-            // event = rc.events.find(event => event.event === 'InstanceCreated');
+            // event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             // [instance, instancesCount] = event.args;
             // SubscriptionsManager = await ethers.getContractAt("SubscriptionsManager",instance);
         });
@@ -382,12 +386,12 @@ describe("AuctionInstance", function () {
             const MaxWinners = 3;
             let currentTime = await mockUseful.currentBlockTimestamp();
             let startingPrice = ONE_ETH;
-            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let increasePrice = BigInt('1000000000'); //gwei
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
@@ -401,7 +405,7 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
@@ -420,10 +424,10 @@ describe("AuctionInstance", function () {
             let tmp2Bid;
             for(let i = 0; i<addresses.length; i++) {
 
-                tmp2Bid = startingPrice.add(increasePrice.mul(i+1));
+                tmp2Bid = startingPrice + (increasePrice * BigInt(i+1));
 
                 await erc20.mint(addresses[i].address, tmp2Bid);
-                await erc20.connect(addresses[i]).approve(AuctionFactory.address, tmp2Bid);
+                await erc20.connect(addresses[i]).approve(AuctionFactory.target, tmp2Bid);
                 
                 await auctionInstance.connect(addresses[i]).bid(tmp2Bid);
 
@@ -439,12 +443,12 @@ describe("AuctionInstance", function () {
             const MaxWinners = 2;
             let currentTime = await mockUseful.currentBlockTimestamp();
             let startingPrice = ONE_ETH;
-            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let increasePrice = BigInt('1000000000'); //gwei
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
@@ -458,21 +462,21 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
             let auctionInstance = await ethers.getContractAt("MockAuction",instance);
 
-            let tmp2Bid = startingPrice.add(increasePrice);
+            let tmp2Bid = startingPrice + (increasePrice);
 
             await erc20.mint(alice.address, tmp2Bid);
-            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(alice).bid(tmp2Bid);
 
-            tmp2Bid = startingPrice.add(increasePrice.mul(TWO));
+            tmp2Bid = startingPrice + (increasePrice * (TWO));
             await erc20.mint(bob.address, tmp2Bid);
-            await erc20.connect(bob).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(bob).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(bob).bid(tmp2Bid);
             
             //pass 86400 seconds
@@ -485,7 +489,7 @@ describe("AuctionInstance", function () {
             
             await expect(
                 auctionInstance.connect(bob).claim()
-            ).to.be.revertedWith('AlreadyClaimed()');
+            ).to.be.revertedWithCustomError(auctionInstance, 'AlreadyClaimed');
             
         });
 
@@ -493,12 +497,12 @@ describe("AuctionInstance", function () {
             const MaxWinners = 2;
             let currentTime = await mockUseful.currentBlockTimestamp();
             let startingPrice = ONE_ETH;
-            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let increasePrice = BigInt('1000000000'); //gwei
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
@@ -512,27 +516,27 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
             let auctionInstance = await ethers.getContractAt("MockAuction",instance);
 
-            let tmp2Bid = startingPrice.add(increasePrice);
+            let tmp2Bid = startingPrice + (increasePrice);
 
             await erc20.mint(alice.address, tmp2Bid);
-            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(alice).bid(tmp2Bid);
 
-            tmp2Bid = startingPrice.add(increasePrice.mul(TWO));
+            tmp2Bid = startingPrice + (increasePrice * (TWO));
             await erc20.mint(bob.address, tmp2Bid);
-            await erc20.connect(bob).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(bob).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(bob).bid(tmp2Bid);
             
             // try to claim before auction end
             await expect(
                 auctionInstance.connect(bob).claim()
-            ).to.be.revertedWith('AuctionNotFinished()');
+            ).to.be.revertedWithCustomError(auctionInstance, 'AuctionNotFinished');
 
         });
 
@@ -540,12 +544,12 @@ describe("AuctionInstance", function () {
             const MaxWinners = 2;
             let currentTime = await mockUseful.currentBlockTimestamp();
             let startingPrice = ONE_ETH;
-            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let increasePrice = BigInt('1000000000'); //gwei
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
@@ -559,21 +563,21 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
             let auctionInstance = await ethers.getContractAt("MockAuction",instance);
 
-            let tmp2Bid = startingPrice.add(increasePrice);
+            let tmp2Bid = startingPrice + (increasePrice);
 
             await erc20.mint(alice.address, tmp2Bid);
-            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(alice).bid(tmp2Bid);
 
-            tmp2Bid = startingPrice.add(increasePrice.mul(TWO));
+            tmp2Bid = startingPrice + (increasePrice * (TWO));
             await erc20.mint(bob.address, tmp2Bid);
-            await erc20.connect(bob).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(bob).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(bob).bid(tmp2Bid);
             
             //pass 86400 seconds
@@ -582,19 +586,19 @@ describe("AuctionInstance", function () {
 
             await expect(
                 auctionInstance.connect(charlie).claim()
-            ).to.be.revertedWith('NotWinning()');
+            ).to.be.revertedWithCustomError(auctionInstance, 'NotWinning');
         });
 
         it("shouldn't let winning bidders bid again", async() => {
             const MaxWinners = 2;
             let currentTime = await mockUseful.currentBlockTimestamp();
             let startingPrice = ONE_ETH;
-            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let increasePrice = BigInt('1000000000'); //gwei
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
@@ -608,21 +612,21 @@ describe("AuctionInstance", function () {
             let tx = await AuctionFactory.connect(owner).produceAuction(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
             let auctionInstance = await ethers.getContractAt("MockAuction",instance);
 
-            let tmp2Bid = startingPrice.add(increasePrice);
+            let tmp2Bid = startingPrice + (increasePrice);
 
             await erc20.mint(alice.address, tmp2Bid);
-            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(alice).bid(tmp2Bid);
 
-            tmp2Bid = startingPrice.add(increasePrice.mul(TWO));
+            tmp2Bid = startingPrice + (increasePrice * (TWO));
             await erc20.mint(alice.address, tmp2Bid);
-            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.target, tmp2Bid);
 
             await expect(
                 auctionInstance.connect(alice).bid(tmp2Bid)
@@ -634,19 +638,19 @@ describe("AuctionInstance", function () {
             let mockNFTF = await ethers.getContractFactory("MockNFT");
             let mockNFT = await mockNFTF.deploy();
             await mockNFT.init("name", "symbol");
-            await releaseManager.connect(owner).customRegisterInstance(mockNFT.address);
+            await releaseManager.connect(owner).customRegisterInstance(mockNFT.target);
             //
             const MaxWinners = 2;
             let currentTime = await mockUseful.currentBlockTimestamp();
             let startingPrice = ONE_ETH;
-            let increasePrice = BigNumber.from('1000000000'); //gwei
+            let increasePrice = BigInt('1000000000'); //gwei
             let tokenIdtoClaim = 3;
             let tokenIds = [1,2,tokenIdtoClaim];
             p = [
-                erc20.address,          // address token,
+                erc20.target,          // address token,
                 false,                  // bool cancelable,
                 currentTime,            // uint64 startTime,
-                currentTime.add(86400), // uint64 endTime,
+                currentTime + (86400n), // uint64 endTime,
                 NO_CLAIM_PERIOD,
                 startingPrice,          // uint256 startingPrice,
                 [
@@ -655,27 +659,27 @@ describe("AuctionInstance", function () {
                    true             // bool canBidAboveIncrease;
                 ],
                 MaxWinners,             // uint32 maxWinners,
-                mockNFT.address,        // address nft,
+                mockNFT.target,        // address nft,
                 tokenIds                // uint256[] memory tokenIds
             ];
 
             let tx = await AuctionFactory.connect(owner).produceAuctionNFT(...p);
 
             const rc = await tx.wait(); // 0ms, as tx is already confirmed
-            const event = rc.events.find(event => event.event === 'InstanceCreated');
+            const event = rc.logs.find(event => event.fragment && event.fragment.name=== 'InstanceCreated');
             const [instance,] = event.args;
             expect(instance).not.to.be.eq(ZERO_ADDRESS);
             
             let auctionInstance = await ethers.getContractAt("MockAuctionNFT",instance);
 
-            let tmp2Bid = startingPrice.add(increasePrice);
+            let tmp2Bid = startingPrice + (increasePrice);
             await erc20.mint(alice.address, tmp2Bid);
-            await erc20.connect(alice).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(alice).approve(AuctionFactory.target, tmp2Bid);
             await auctionInstance.connect(alice).bid(tmp2Bid);
 
-            tmp2Bid = startingPrice.add(increasePrice.mul(TWO));
+            tmp2Bid = startingPrice + (increasePrice * (TWO));
             await erc20.mint(bob.address, tmp2Bid);
-            await erc20.connect(bob).approve(AuctionFactory.address, tmp2Bid);
+            await erc20.connect(bob).approve(AuctionFactory.target, tmp2Bid);
             let balanceBobBeforeBid = await erc20.balanceOf(bob.address);
             await auctionInstance.connect(bob).bid(tmp2Bid);
             let balanceBobAfterBid = await erc20.balanceOf(bob.address);
