@@ -3,7 +3,7 @@ pragma solidity >=0.8.18;
 import "./AuctionBase.sol";
 import "./interfaces/IAuctionCommunity.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
-import "@artman325/community/contracts/interfaces/ICommunity.sol";
+import "@intercoin/community/contracts/interfaces/ICommunity.sol";
 
 contract AuctionCommunity is AuctionBase, IAuctionCommunity {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
