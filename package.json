@@ -17,10 +17,10 @@
   },
   "homepage": "https://github.com/Intercoin/Auction#readme",
   "dependencies": {
-    "@artman325/community": "^1.1.4",
-    "@artman325/nonfungibletokencontract": "^1.0.0",
-    "@artman325/releasemanager": "^2.0.0",
-    "@artman325/subscriptioncontract": "^1.1.0",
+    "@intercoin/community": "^1.2.2",
+    "@intercoin/nonfungibletokencontract": "^1.0.0",
+    "@intercoin/releasemanager": "^2.2.1",
+    "@intercoin/subscriptioncontract": "^1.2.0",
     "@openzeppelin/contracts": "^4.8.1",
     "@openzeppelin/contracts-upgradeable": "^4.8.1"
   },

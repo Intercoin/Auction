@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./interfaces/IAuctionBase.sol";
 import "./interfaces/IAuctionFactory.sol";
-import "@artman325/releasemanager/contracts/CostManagerHelper.sol";
+import "@intercoin/releasemanager/contracts/CostManagerHelper.sol";
 //import "hardhat/console.sol";
 contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHelper, OwnableUpgradeable {
 
@@ -83,11 +83,9 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
         __Ownable_init();
         __ReentrancyGuard_init();
 
-        __CostManagerHelper_init(_msgSender()); // here sender it's deployer/ it's our factory.
+        __CostManagerHelper_init(_msgSender(),costManager); // here sender it's deployer/ it's our factory.
         // or we can put `owner()` instead `_msgSender()`. it was the same here
         // EOA will be owner after factory will transferOwnership in produce
-
-        _setCostManager(costManager);
 
         token = token_;
         canceled = false;
@@ -262,7 +260,7 @@ contract AuctionBase is IAuctionBase, ReentrancyGuardUpgradeable, CostManagerHel
 
     
     function _charge(address payer, uint256 amount) private {
-        bool success = IAuctionFactory(deployer).doCharge(token, amount, payer, address(this));
+        bool success = IAuctionFactory(getDeployer()).doCharge(token, amount, payer, address(this));
         if (!success) {
             revert ChargeFailed();
         }

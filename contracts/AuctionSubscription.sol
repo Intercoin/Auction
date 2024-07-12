@@ -2,7 +2,7 @@
 pragma solidity >=0.8.18;
 import "./AuctionBase.sol";
 import "./interfaces/IAuctionSubscription.sol";
-import "@artman325/subscriptioncontract/contracts/interfaces/ISubscriptionsManagerUpgradeable.sol";
+import "@intercoin/subscriptioncontract/contracts/interfaces/ISubscriptionsManagerUpgradeable.sol";
 import "./libs/SwapSettingsLib.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/lib/contracts/libraries/TransferHelper.sol";
