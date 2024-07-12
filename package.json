@@ -1,5 +1,5 @@
 {
-  "name": "auctioncontract",
+  "name": "@intercoin/auction",
   "version": "1.0.0",
   "description": "Functionality for all kinds of auctions, where people compete to acquire various assets",
   "main": "index.js",
