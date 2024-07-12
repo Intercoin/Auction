@@ -46,12 +46,31 @@ async function main() {
 		throw("Arguments file: wrong addresses");
 	}
 
-	const [deployer] = await ethers.getSigners();
+	var signers = await ethers.getSigners();
+    const provider = ethers.provider;
+	var deployer,
+        deployer_auxiliary,
+        deployer_releasemanager,
+        deployer_auction;
+    if (signers.length == 1) {
+        
+        deployer = signers[0];
+        deployer_auxiliary = signers[0];
+        deployer_releasemanager = signers[0];
+        deployer_auction = signers[0];
+    } else {
+        [
+            deployer,
+            deployer_auxiliary,
+            deployer_releasemanager,
+            deployer_auction
+        ] = signers;
+    }
 	
 	const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 	console.log(
 		"Deploying contracts with the account:",
-		deployer.address
+		deployer_auction.address
 	);
 
 	var options = {
@@ -71,21 +90,45 @@ async function main() {
 		options
 	]
 
-    const deployerBalanceBefore = await deployer.getBalance();
+    const deployerBalanceBefore = await provider.getBalance(deployer_auction.address);
     console.log("Account balance:", (deployerBalanceBefore).toString());
 
 	const AuctionFactoryF = await ethers.getContractFactory("AuctionFactory");
 
-	this.factory = await AuctionFactoryF.connect(deployer).deploy(...params);
+	this.factory = await AuctionFactoryF.connect(deployer_auction).deploy(...params);
 
-	console.log("Factory deployed at:", this.factory.address);
+	await this.factory.waitForDeployment();
+
+	console.log("Factory deployed at:", this.factory.target);
 	console.log("with params:", [..._params]);
 
 	console.log("registered with release manager:", data_object.releaseManager);
-	
-	const deployerBalanceAfter = await deployer.getBalance();
-	console.log("Spent:", ethers.utils.formatEther(deployerBalanceBefore.sub(deployerBalanceAfter)));
-	console.log("gasPrice:", ethers.utils.formatUnits((await network.provider.send("eth_gasPrice")), "gwei")," gwei");
+	const releaseManager = await ethers.getContractAt("ReleaseManager",data_object.releaseManager);
+    let txNewRelease = await releaseManager.connect(deployer_releasemanager).newRelease(
+        [this.factory.target], 
+        [
+            [
+                9,//uint8 factoryIndex; 
+                9,//uint16 releaseTag; 
+                "0x53696c766572000000000000000000000000000000000000"//bytes24 factoryChangeNotes;
+            ]
+        ]
+    );
+
+    console.log('newRelease - waiting');
+    await txNewRelease.wait(3);
+    console.log('newRelease - mined');
+
+	const deployerBalanceAfter = await provider.getBalance(deployer_auction.address);
+	console.log("Spent:", ethers.formatEther(deployerBalanceBefore - deployerBalanceAfter));
+	console.log("gasPrice:", ethers.formatUnits((await network.provider.send("eth_gasPrice")), "gwei")," gwei");
+
+	console.log('verifying');
+    if (hre.network.name == 'hardhat') {
+        console.log('skip for forks');
+    } else {
+        await hre.run("verify:verify", {address: this.factory.target, constructorArguments: _params});
+    }
 }
 
 main()

@@ -44,14 +44,32 @@ async function main() {
     }
 	//----------------
 
-	const [deployer] = await ethers.getSigners();
+    var signers = await ethers.getSigners();
+    const provider = ethers.provider;
+    var deployer,
+        deployer_auxiliary,
+        deployer_releasemanager,
+        deployer_auction;
+    if (signers.length == 1) {
+        
+        deployer = signers[0];
+        deployer_auxiliary = signers[0];
+        deployer_releasemanager = signers[0];
+        deployer_auction = signers[0];
+    } else {
+        [
+            deployer,
+            deployer_auxiliary,
+            deployer_releasemanager,
+            deployer_auction
+        ] = signers;
+    }
 	
-	const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-    const RELEASE_MANAGER = hre.network.name == 'mumbai'? process.env.RELEASE_MANAGER_MUMBAI : process.env.RELEASE_MANAGER;
+    const RELEASE_MANAGER = process.env.RELEASE_MANAGER;
     
 	console.log(
 		"Deploying contracts with the account:",
-		deployer.address
+		deployer_auxiliary.address
 	);
 
 	// var options = {
@@ -59,7 +77,7 @@ async function main() {
 	// 	gasLimit: 10e6
 	// };
 
-    const deployerBalanceBefore = await deployer.getBalance();
+    const deployerBalanceBefore = await provider.getBalance(deployer_auxiliary.address);
     console.log("Account balance:", (deployerBalanceBefore).toString());
 
 	const AuctionF = await ethers.getContractFactory("Auction");
@@ -67,26 +85,31 @@ async function main() {
     const AuctionCommunityF = await ethers.getContractFactory("AuctionCommunity");
     const AuctionSubscriptionF = await ethers.getContractFactory("AuctionSubscription");
 
-	let implementationAuction = await AuctionF.connect(deployer).deploy();
-    let implementationAuctionNFT = await AuctionNFTF.connect(deployer).deploy();
-    let implementationAuctionCommunity = await AuctionCommunityF.connect(deployer).deploy();
-    let implementationAuctionSubscription = await AuctionSubscriptionF.connect(deployer).deploy();
+	let implementationAuction = await AuctionF.connect(deployer_auxiliary).deploy();
+    let implementationAuctionNFT = await AuctionNFTF.connect(deployer_auxiliary).deploy();
+    let implementationAuctionCommunity = await AuctionCommunityF.connect(deployer_auxiliary).deploy();
+    let implementationAuctionSubscription = await AuctionSubscriptionF.connect(deployer_auxiliary).deploy();
     
-	console.log("Implementations:");
-	console.log("  implementationAuction deployed at:               ", implementationAuction.address);
-    console.log("  implementationAuctionNFT deployed at:            ", implementationAuctionNFT.address);
-    console.log("  implementationAuctionCommunity deployed at:      ", implementationAuctionCommunity.address);
-    console.log("  implementationAuctionSubscription deployed at:   ", implementationAuctionSubscription.address);1
+    await implementationAuction.waitForDeployment();
+    await implementationAuctionNFT.waitForDeployment();
+    await implementationAuctionCommunity.waitForDeployment();
+    await implementationAuctionSubscription.waitForDeployment();
 
-	data_object.implementationAuction 	            = implementationAuction.address;
-    data_object.implementationAuctionNFT 	        = implementationAuctionNFT.address;
-    data_object.implementationAuctionCommunity      = implementationAuctionCommunity.address;
-    data_object.implementationAuctionSubscription   = implementationAuctionSubscription.address;
+	console.log("Implementations:");
+	console.log("  implementationAuction deployed at:               ", implementationAuction.target);
+    console.log("  implementationAuctionNFT deployed at:            ", implementationAuctionNFT.target);
+    console.log("  implementationAuctionCommunity deployed at:      ", implementationAuctionCommunity.target);
+    console.log("  implementationAuctionSubscription deployed at:   ", implementationAuctionSubscription.target);
+
+	data_object.implementationAuction 	            = implementationAuction.target;
+    data_object.implementationAuctionNFT 	        = implementationAuctionNFT.target;
+    data_object.implementationAuctionCommunity      = implementationAuctionCommunity.target;
+    data_object.implementationAuctionSubscription   = implementationAuctionSubscription.target;
     data_object.releaseManager                      = RELEASE_MANAGER;
 
-	const deployerBalanceAfter = await deployer.getBalance();
-	console.log("Spent:", ethers.utils.formatEther(deployerBalanceBefore.sub(deployerBalanceAfter)));
-	console.log("gasPrice:", ethers.utils.formatUnits((await network.provider.send("eth_gasPrice")), "gwei")," gwei");
+	const deployerBalanceAfter = await provider.getBalance(deployer_auxiliary.address);
+	console.log("Spent:", ethers.formatEther(deployerBalanceBefore - deployerBalanceAfter));
+	console.log("gasPrice:", ethers.formatUnits((await network.provider.send("eth_gasPrice")), "gwei")," gwei");
 
 	//---
 	const ts_updated = Date.now();
@@ -96,6 +119,16 @@ async function main() {
     let data_to_write = JSON.stringify(data_object_root, null, 2);
 	console.log(data_to_write);
     await write_data(data_to_write);
+
+    console.log('verifying');
+    if (hre.network.name == 'hardhat') {
+        console.log('skip for forks');
+    } else {
+        await hre.run("verify:verify", {address: data_object.implementationAuction, constructorArguments: []});
+        await hre.run("verify:verify", {address: data_object.implementationAuctionNFT, constructorArguments: []});
+        await hre.run("verify:verify", {address: data_object.implementationAuctionCommunity, constructorArguments: []});
+        await hre.run("verify:verify", {address: data_object.implementationAuctionSubscription, constructorArguments: []});
+    }
 }
 
 main()
